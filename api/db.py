@@ -9,7 +9,9 @@ mongodb_host = settings.mongodb_host
 mongodb_holoduledb = f"mongodb://{mongodb_user}:{mongodb_password}@{mongodb_host}/holoduledb"
 
 def get_db():
-    client = motor.motor_asyncio.AsyncIOMotorClient(mongodb_holoduledb)
-    db = client.holoduledb
-    yield db
-    client.close()
+    try:
+        client = motor.motor_asyncio.AsyncIOMotorClient(mongodb_holoduledb)
+        db = client.holoduledb
+        yield db
+    finally:
+        client.close()
