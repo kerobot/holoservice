@@ -5,12 +5,12 @@ from api.schemas.schedules import ScheduleCollection
 
 router = APIRouter()
 
-@router.get("/schecules", response_model = ScheduleCollection)
+@router.get("/schecules", response_model = ScheduleCollection, response_model_by_alias = False)
 async def get_schecules(date: str, db = Depends(get_db)):
     holodule_collection = db.get_collection("holodules")
     return ScheduleCollection(schedules = await holodule_collection.find({"datetime": {'$regex':'^'+date}}).sort("datetime", -1).to_list(1000))
 
-@router.post("/schecules", response_model = Schedule, status_code=status.HTTP_201_CREATED)
+@router.post("/schecules", response_model = Schedule, status_code = status.HTTP_201_CREATED, response_model_by_alias = False)
 async def create_schecule(schedule: Schedule = Body(...), db = Depends(get_db)):
     holodule_collection = db.get_collection("holodules")
     new_schedule = await holodule_collection.insert_one(
