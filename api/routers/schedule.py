@@ -8,22 +8,25 @@ from api.schemas.schedules import ScheduleCollection
 
 router = APIRouter()
 
-@router.get("/schecules", response_model=ScheduleCollection, response_model_by_alias=False)
-async def get_schecules(schedule_date: date, db=Depends(get_db)):
+@router.get("/schedules", response_model=ScheduleCollection, response_model_by_alias=False)
+async def get_schedules(schedule_date: date, code: str = None, db = Depends(get_db)):
     schedule_collection = db.get_collection("schedules")
     start = datetime.combine(schedule_date, time())
     end = start + timedelta(days=1)
-    return ScheduleCollection(schedules=await schedule_collection.find({"streaming_at": {'$gte': start, '$lt': end}}).sort("streaming_at", -1).to_list(1000))
+    filter_dict = {'$and':[{"streaming_at": {'$gte': start, '$lt': end}}]}
+    if code is not None:
+        filter_dict["$and"].append({"code": code})
+    return ScheduleCollection(schedules=await schedule_collection.find(filter_dict).sort("streaming_at", -1).to_list(1000))
 
 @router.get("/schedules/{id}", response_model=ScheduleModel, response_model_by_alias=False)
-async def get_schecule(id: str, db=Depends(get_db)):
+async def get_schedule(id: str, db = Depends(get_db)):
     schedule_collection = db.get_collection("schedules")
     if (schedule := await schedule_collection.find_one({"_id": ObjectId(id)})) is not None:
         return schedule
     raise HTTPException(status_code=404, detail=f"Schedule {id} not found")
 
-@router.post("/schecules", response_model = ScheduleModel, status_code = status.HTTP_201_CREATED, response_model_by_alias = False)
-async def create_schecule(schedule: ScheduleModel = Body(...), db = Depends(get_db)):
+@router.post("/schedules", response_model=ScheduleModel, status_code=status.HTTP_201_CREATED, response_model_by_alias=False)
+async def create_schedule(schedule: ScheduleModel = Body(...), db = Depends(get_db)):
     schedule_collection = db.get_collection("schedules")
     new_schedule = await schedule_collection.insert_one(
         schedule.model_dump(by_alias=True, exclude=["id"])
@@ -33,8 +36,8 @@ async def create_schecule(schedule: ScheduleModel = Body(...), db = Depends(get_
     )
     return created_schedule
 
-@router.put("/schecules/{id}", response_model=ScheduleModel, response_model_by_alias=False)
-async def update_schecule(id: str, schedule: ScheduleModel = Body(...), db = Depends(get_db)):
+@router.put("/schedules/{id}", response_model=ScheduleModel, response_model_by_alias=False)
+async def update_schedule(id: str, schedule: ScheduleModel = Body(...), db = Depends(get_db)):
     schedule_collection = db.get_collection("schedules")
     schedule = {
         k: v for k, v in schedule.model_dump(by_alias=True).items() if v is not None
@@ -53,8 +56,8 @@ async def update_schecule(id: str, schedule: ScheduleModel = Body(...), db = Dep
         return existing_schedule
     raise HTTPException(status_code=404, detail=f"Schedule {id} not found")
 
-@router.delete("/schecules/{id}")
-async def delete_schecule(id: str, db = Depends(get_db)):
+@router.delete("/schedules/{id}")
+async def delete_schedule(id: str, db = Depends(get_db)):
     schedule_collection = db.get_collection("schedules")
     delete_result = await schedule_collection.delete_one({"_id": ObjectId(id)})
     if delete_result.deleted_count == 1:
