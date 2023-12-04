@@ -1,15 +1,18 @@
 from datetime import datetime, timedelta, date, time
 from fastapi import APIRouter, Body, Depends, HTTPException, Response, status
 from pymongo import ReturnDocument
+from api.oauth2 import get_current_user
 from bson import ObjectId
 from api.db import get_db
 from api.schemas.schedule import ScheduleModel
 from api.schemas.schedules import ScheduleCollection
 
-router = APIRouter()
+router = APIRouter(
+    tags=['schedule']
+)
 
 @router.get("/schedules", response_model=ScheduleCollection, response_model_by_alias=False)
-async def get_schedules(schedule_date: date, code: str = None, db = Depends(get_db)):
+async def get_schedules(schedule_date: date, code: str = None, db = Depends(get_db), current_user: str = Depends(get_current_user)):
     schedule_collection = db.get_collection("schedules")
     start = datetime.combine(schedule_date, time())
     end = start + timedelta(days=1)

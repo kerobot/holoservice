@@ -6,6 +6,8 @@ class Settings(BaseSettings):
     app_name: str = "Holodule Service"
     mongodb_uri: str
     jwt_secret_key: str
+    jwt_algorithm: str
+    jwt_exp_delta_minutes: int = 15
 
     model_config = SettingsConfigDict(env_file=".env")
 
