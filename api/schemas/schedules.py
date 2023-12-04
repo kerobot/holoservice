@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from api.schemas.schedule import Schedule
+from api.schemas.schedule import ScheduleModel
 
 class ScheduleCollection(BaseModel):
-    schedules: list[Schedule]
+    schedules: list[ScheduleModel]

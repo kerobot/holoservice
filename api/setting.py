@@ -4,9 +4,7 @@ from pydantic import ValidationError
 
 class Settings(BaseSettings):
     app_name: str = "Holodule Service"
-    mongodb_user: str
-    mongodb_password: str
-    mongodb_host: str
+    mongodb_uri: str
     jwt_secret_key: str
 
     model_config = SettingsConfigDict(env_file=".env")
