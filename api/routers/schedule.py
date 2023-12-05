@@ -4,25 +4,11 @@ from pymongo import ReturnDocument
 from api.oauth2 import get_current_user
 from bson import ObjectId
 from api.db import get_db
-from api.schemas.schedule import ScheduleModel
-from api.schemas.schedules import ScheduleCollection
+from api.schemas.schedule import ScheduleModel, ScheduleCollection
 
 router = APIRouter(
     tags=['schedule']
 )
-
-@router.get("/schedules", response_model=ScheduleCollection, response_model_by_alias=False)
-async def get_schedules(date: date, 
-                        code: str = None, 
-                        db = Depends(get_db), 
-                        current_user: str = Depends(get_current_user)):
-    schedule_collection = db.get_collection("schedules")
-    start = datetime.combine(date, time())
-    end = start + timedelta(days=1)
-    filter_dict = {'$and':[{"streaming_at": {'$gte': start, '$lt': end}}]}
-    if code is not None:
-        filter_dict["$and"].append({"code": code})
-    return ScheduleCollection(schedules=await schedule_collection.find(filter_dict).sort("streaming_at", -1).to_list(1000))
 
 @router.get("/schedules/{id}", response_model=ScheduleModel, response_model_by_alias=False)
 async def get_schedule(id: str, 
@@ -32,6 +18,19 @@ async def get_schedule(id: str,
     if (schedule := await schedule_collection.find_one({"_id": ObjectId(id)})) is not None:
         return schedule
     raise HTTPException(status_code=404, detail=f"Schedule {id} not found")
+
+@router.get("/schedules", response_model=ScheduleCollection, response_model_by_alias=False)
+async def list_schedules(date: date, 
+                        code: str = None, 
+                        db = Depends(get_db), 
+                        current_user: str = Depends(get_current_user)):
+    schedule_collection = db.get_collection("schedules")
+    start = datetime.combine(date, time())
+    end = start + timedelta(days=1)
+    filter_dict = {'$and': [{"streaming_at": {'$gte': start,'$lt': end}}]}
+    if code is not None:
+        filter_dict["$and"].append({"code": code})
+    return ScheduleCollection(schedules=await schedule_collection.find(filter_dict).sort("streaming_at", -1).to_list(1000))
 
 @router.post("/schedules", response_model=ScheduleModel, status_code=status.HTTP_201_CREATED, response_model_by_alias=False)
 async def create_schedule(schedule: ScheduleModel = Body(...), 
@@ -52,13 +51,13 @@ async def update_schedule(id: str,
                           db = Depends(get_db), 
                           current_user: str = Depends(get_current_user)):
     schedule_collection = db.get_collection("schedules")
-    schedule = {
+    update_schedule = {
         k: v for k, v in schedule.model_dump(by_alias=True).items() if v is not None
     }
-    if len(schedule) >= 1:
+    if len(update_schedule) >= 1:
         update_result = await schedule_collection.find_one_and_update(
             {"_id": ObjectId(id)},
-            {"$set": schedule},
+            {"$set": update_schedule},
             return_document=ReturnDocument.AFTER,
         )
         if update_result is not None:

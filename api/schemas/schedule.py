@@ -1,6 +1,5 @@
 from datetime import datetime, timezone, timedelta
 from typing_extensions import Annotated
-from typing import Optional
 from pydantic import BaseModel, ConfigDict, Field, computed_field
 from pydantic.functional_validators import BeforeValidator
 
@@ -9,7 +8,7 @@ UTC = timezone.utc
 JST = timezone(timedelta(hours=+9), "JST")
 
 class ScheduleModel(BaseModel):
-    id: Optional[PyObjectId] = Field(alias="_id", default=None, description="スケジュールID")
+    id: PyObjectId | None = Field(alias="_id", default=None, description="スケジュールID")
     code: str = Field(default=None, description="配信者コード")
     video_id: str = Field(default=None, description="動画ID")
     streaming_at: datetime = Field(default_factory=lambda: datetime.now(tz=JST), description="配信日時")
@@ -46,3 +45,6 @@ class ScheduleModel(BaseModel):
             }
         },
     )
+
+class ScheduleCollection(BaseModel):
+    schedules: list[ScheduleModel]

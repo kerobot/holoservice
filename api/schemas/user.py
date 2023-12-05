@@ -1,12 +1,11 @@
 from typing_extensions import Annotated
-from typing import Optional
 from pydantic import BaseModel, ConfigDict, Field
 from pydantic.functional_validators import BeforeValidator
 
 PyObjectId = Annotated[str, BeforeValidator(str)]
 
 class UserModel(BaseModel):
-    id: Optional[PyObjectId] = Field(alias="_id", default=None, description="ユーザーID")
+    id: PyObjectId | None = Field(alias="_id", default=None, description="ユーザーID")
     username: str = Field(default=None, description="ユーザー名")
     password: str = Field(default=None, description="パスワード")
     firstname: str = Field(default=None, description="姓")
@@ -26,3 +25,6 @@ class UserModel(BaseModel):
             }
         },
     )
+
+class UserCollection(BaseModel):
+    users: list[UserModel]

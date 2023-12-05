@@ -12,7 +12,8 @@ router = APIRouter(
 @router.post('/token')
 async def get_token(request: OAuth2PasswordRequestForm = Depends(), db = Depends(get_db)):
     user_collection = db.get_collection("users")
-    user = await user_collection.find_one({"username": request.username})
+    filter_dict = {'$and': [{"username": request.username},{"disabled": False}]}
+    user = await user_collection.find_one(filter_dict)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
