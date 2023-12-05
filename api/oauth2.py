@@ -4,13 +4,14 @@ from typing import Optional
 from datetime import datetime, timedelta
 from jose import jwt
 from jose.exceptions import JWTError
-from api.setting import get_settings
+from api.settings import get_settings
 from api.schemas.user import UserModel
 from api.db import get_db
 
 settings = get_settings()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
- 
+
+# アクセストークンを作成する関数
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     to_encode = data.copy()
     if expires_delta:
@@ -18,9 +19,11 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     else:
         expire = datetime.utcnow() + timedelta(minutes=settings.jwt_exp_delta_minutes)
     to_encode.update({"exp": expire})
+
     encoded_jwt = jwt.encode(to_encode, settings.jwt_secret_key, algorithm=settings.jwt_algorithm)
     return encoded_jwt
 
+# 現在のユーザーを取得する非同期関数
 async def get_current_user(token: str = Depends(oauth2_scheme), db = Depends(get_db)):
     user_collection = db.get_collection("users")
     credentials_exception = HTTPException(
@@ -28,6 +31,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db = Depends(get
         detail='Colud not validate credentials',
         headers={'WWW-Authenticate': "Bearer"}
     )
+
     try:
         payload = jwt.decode(token, settings.jwt_secret_key, algorithms=settings.jwt_algorithm)
         username: str = payload.get("sub")

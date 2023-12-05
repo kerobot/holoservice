@@ -32,7 +32,7 @@ class ScheduleModel(BaseModel):
         arbitrary_types_allowed=True,   # 任意の型を許可するか
         json_schema_extra={
             "example": {
-                "code": "配信者コード",
+                "code": "HL0000",
                 "video_id": "動画ID",
                 "streaming_at": "2023-12-01T12:00:00Z",
                 "name": "配信者名",
