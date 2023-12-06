@@ -3,6 +3,7 @@ from fastapi.security import OAuth2PasswordBearer
 from datetime import datetime, timedelta
 from jose import jwt
 from jose.exceptions import JWTError
+from api.repository.user import UserRepository
 from api.settings import get_jwt_settings
 from api.schemas.user import UserModel
 from api.db import get_db
@@ -31,8 +32,4 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db = Depends(get
             raise CredentialsException()
     except JWTError:
         raise CredentialsException()
-    user_collection = db.get_collection("users")
-    user = await user_collection.find_one({"username": username})
-    if user is None:
-        raise CredentialsException()
-    return UserModel(**user)
+    return await UserRepository.get_by_name(db, username, enabled_only=True)
