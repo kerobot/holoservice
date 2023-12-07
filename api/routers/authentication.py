@@ -1,6 +1,7 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter
 from fastapi.param_functions import Depends
 from fastapi.security.oauth2 import OAuth2PasswordRequestForm
+from motor.core import AgnosticDatabase
 from api.db import get_db
 from api.exceptions import NotFoundException
 from api.oauth2 import create_access_token
@@ -12,13 +13,12 @@ router = APIRouter(
 )
 
 @router.post('/token')
-async def get_token(request: OAuth2PasswordRequestForm = Depends(), db = Depends(get_db)):
-    user = await UserRepository.get_by_name(db, request.username, enabled_only=True)
+async def get_token(request: OAuth2PasswordRequestForm = Depends(), 
+                    db: AgnosticDatabase = Depends(get_db)) -> dict:
+    user: UserModel = await UserRepository.get_by_username(db, request.username)
     if user.password != request.password:
         raise NotFoundException(message='Incorrect password')
-
-    access_token = create_access_token(data={'sub': user.username})
-
+    access_token: str = create_access_token(data={'sub': user.username})
     return {
         'access_token': access_token,
         'token_type': 'bearer',

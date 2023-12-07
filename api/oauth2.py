@@ -7,13 +7,13 @@ from api.repository.user import UserRepository
 from api.settings import get_jwt_settings
 from api.schemas.user import UserModel
 from api.db import get_db
-from api.exceptions import CredentialsException
+from api.exceptions import CredentialsException, InactiveUserException
 
 jwt_settings = get_jwt_settings()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 # アクセストークンを作成する関数
-def create_access_token(data: dict, expires_delta: timedelta | None = None):
+def create_access_token(data: dict, expires_delta: timedelta | None = None) -> str:
     to_encode = data.copy()
     if expires_delta:
         expire = datetime.utcnow() + expires_delta
@@ -24,7 +24,7 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
     return encoded_jwt
 
 # アクセストークンから現在のユーザーを取得する非同期関数
-async def get_current_user(token: str = Depends(oauth2_scheme), db = Depends(get_db)):
+async def get_current_user(token: str = Depends(oauth2_scheme), db = Depends(get_db)) -> UserModel:
     try:
         payload = jwt.decode(token, jwt_settings.secret_key, algorithms=jwt_settings.algorithm)
         username: str = payload.get("sub")
@@ -32,4 +32,10 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db = Depends(get
             raise CredentialsException()
     except JWTError:
         raise CredentialsException()
-    return await UserRepository.get_by_name(db, username, enabled_only=True)
+    return await UserRepository.get_by_username(db, username, enabled_only=True)
+
+# 現在のユーザーが有効かどうかを確認する非同期関数
+async def get_current_active_user(current_user: UserModel = Depends(get_current_user)) -> UserModel:
+    if current_user.disabled:
+        raise InactiveUserException(identifier=current_user.id)
+    return current_user

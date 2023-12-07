@@ -16,10 +16,10 @@ class JwtSettings(BaseSettings):
 
 # キャッシュしたMongoDB設定を取得する関数
 @lru_cache
-def get_mongo_settings():
+def get_mongo_settings() -> MongoSettings:
     return MongoSettings()
 
 # キャッシュしたJWT設定を取得する関数
 @lru_cache
-def get_jwt_settings():
+def get_jwt_settings() -> JwtSettings:
     return JwtSettings()

@@ -1,6 +1,6 @@
 from typing import Type
 from fastapi.responses import JSONResponse
-from fastapi import HTTPException, status
+from fastapi import status
 from pydantic import BaseModel, Field
 
 class BaseError(BaseModel):
@@ -13,6 +13,9 @@ class NotFoundError(BaseIdentifiedError):
     pass
 
 class AlreadyExistsError(BaseIdentifiedError):
+    pass
+
+class InactiveUserError(BaseIdentifiedError):
     pass
 
 class CredentialsError(BaseError):
@@ -60,6 +63,11 @@ class AlreadyExistsException(BaseIdentifiedException):
     message = "The entity already exists"
     code = status.HTTP_409_CONFLICT
     model = AlreadyExistsError
+
+class InactiveUserException(BaseIdentifiedException):
+    message = "Inactive user"
+    code = status.HTTP_400_BAD_REQUEST
+    model = InactiveUserError
 
 class CredentialsException(BaseAPIException):
     message = "Colud not validate credentials"
