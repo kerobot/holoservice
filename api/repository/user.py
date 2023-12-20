@@ -46,6 +46,7 @@ class UserRepository:
         update_user = {
             k: v for k, v in user.model_dump(by_alias=True).items() if v is not None
         }
+        # 更新対象が存在する場合は更新する
         if len(update_user) >= 1:
             result = await user_collection.find_one_and_update(
                 {"_id": ObjectId(id)},

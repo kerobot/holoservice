@@ -3,14 +3,31 @@ from fastapi.security import OAuth2PasswordBearer
 from datetime import datetime, timedelta
 from jose import jwt
 from jose.exceptions import JWTError
+from passlib.context import CryptContext
 from api.repository.user import UserRepository
+from api.schemas.token import TokenData
 from api.settings import get_jwt_settings
 from api.schemas.user import UserModel
 from api.db import get_db
 from api.exceptions import CredentialsException, InactiveUserException
 
 jwt_settings = get_jwt_settings()
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+
+def get_hashed_password(password) -> str:
+    return pwd_context.hash(password)
+
+def verify_password(plain_password, hashed_password) -> bool:
+    return pwd_context.verify(plain_password, hashed_password)
+
+async def authenticate_user(username: str, password: str, db = Depends(get_db)) -> UserModel | None:
+    user: UserModel = await UserRepository.get_by_username(db, username)
+    if not user:
+        return None
+    if not verify_password(password, user.password):
+        return None
+    return user
 
 # アクセストークンを作成する関数
 def create_access_token(data: dict, expires_delta: timedelta | None = None) -> str:
@@ -30,9 +47,10 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db = Depends(get
         username: str = payload.get("sub")
         if username is None:
             raise CredentialsException()
+        token_data = TokenData(username=username)
     except JWTError:
         raise CredentialsException()
-    return await UserRepository.get_by_username(db, username, enabled_only=True)
+    return await UserRepository.get_by_username(db, username=token_data.username)
 
 # 現在のユーザーが有効かどうかを確認する非同期関数
 async def get_current_active_user(current_user: UserModel = Depends(get_current_user)) -> UserModel:
