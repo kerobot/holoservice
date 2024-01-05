@@ -1,8 +1,8 @@
 [tool.poetry]
-name = "api"
-version = "0.1.0"
-description = ""
-authors = ["Manabu Kikuchi <mkikuchi@imprex.co.jp>"]
+name = "holoservice"
+version = "1.0.0"
+description = "ホロジュールの配信情報を提供"
+authors = ["kerobot"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
