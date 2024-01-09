@@ -10,6 +10,7 @@ class ScheduleRepository:
     async def get_by_id(db: AgnosticDatabase, 
                         id: str) -> ScheduleModel:
         schedule_collection = db.get_collection("schedules")
+        # ウォルラス演算子を利用して schedule が None でない場合に schedule を返す
         if (schedule := await schedule_collection.find_one({"_id": ObjectId(id)})) is not None:
             return schedule
         raise NotFoundException(identifier=id)
@@ -44,7 +45,7 @@ class ScheduleRepository:
                      id: str, 
                      schedule: ScheduleModel) -> ScheduleModel:
         schedule_collection = db.get_collection("schedules")
-        # ユーザーのキーと値を取得し、辞書内包表記を利用して値が None でない場合に update_user に格納する
+        # ユーザーのキーと値を取得し、辞書内包表記を利用して値が None でない場合に update_schedule に格納する
         update_schedule = {
             k: v for k, v in schedule.model_dump(by_alias=True).items() if v is not None
         }

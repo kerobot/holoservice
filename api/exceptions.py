@@ -76,8 +76,6 @@ class CredentialsException(BaseAPIException):
     headers = {'WWW-Authenticate': "Bearer"}
 
 def get_exception_responses(*args: Type[BaseAPIException]) -> dict:
-    """Given BaseAPIException classes, return a dict of responses used on FastAPI endpoint definition, with the format:
-    {statuscode: schema, statuscode: schema, ...}"""
     responses = dict()
     for cls in args:
         responses.update(cls.response_model())

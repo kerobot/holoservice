@@ -9,7 +9,7 @@ class StreamerRepository:
     async def get_by_id(db: AgnosticDatabase, 
                         id: str) -> StreamerModel:
         streamer_collection = db.get_collection("streamers")
-        # ウォルラス演算子を利用して user が None でない場合に user を返す
+        # ウォルラス演算子を利用して streamer が None でない場合に streamer を返す
         if (streamer := await streamer_collection.find_one({"_id": ObjectId(id)})) is not None:
             return StreamerModel(**streamer)
         raise NotFoundException(identifier=id)
@@ -18,7 +18,7 @@ class StreamerRepository:
     async def get_by_streamername(db: AgnosticDatabase, 
                               streamername: str) -> StreamerModel:
         streamer_collection = db.get_collection("streamers")
-        # ウォルラス演算子を利用して user が None でない場合に user を返す
+        # ウォルラス演算子を利用して streamer が None でない場合に streamer を返す
         if (streamer := await streamer_collection.find_one({"name": streamername})) is not None:
             return StreamerModel(**streamer)
         raise NotFoundException(identifier=streamername)

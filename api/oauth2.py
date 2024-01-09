@@ -16,12 +16,15 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 def get_hashed_password(password) -> str:
+    # パスワードをハッシュ化する
     return pwd_context.hash(password)
 
 def verify_password(plain_password, hashed_password) -> bool:
+    # パスワードが正しいかどうかを確認する
     return pwd_context.verify(plain_password, hashed_password)
 
 async def authenticate_user(username: str, password: str, db = Depends(get_db)) -> UserModel | None:
+    # ユーザーを認証する
     user: UserModel = await UserRepository.get_by_username(db, username)
     if not user:
         return None
@@ -29,8 +32,8 @@ async def authenticate_user(username: str, password: str, db = Depends(get_db)) 
         return None
     return user
 
-# アクセストークンを作成する関数
 def create_access_token(data: dict, expires_delta: timedelta | None = None) -> str:
+    # アクセストークンを作成する
     to_encode = data.copy()
     if expires_delta:
         expire = datetime.utcnow() + expires_delta
@@ -40,8 +43,8 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None) -> s
     encoded_jwt = jwt.encode(to_encode, jwt_settings.secret_key, algorithm=jwt_settings.algorithm)
     return encoded_jwt
 
-# アクセストークンから現在のユーザーを取得する非同期関数
 async def get_current_user(token: str = Depends(oauth2_scheme), db = Depends(get_db)) -> UserModel:
+    # アクセストークンから現在のユーザーを非同期で取得する
     try:
         payload = jwt.decode(token, jwt_settings.secret_key, algorithms=jwt_settings.algorithm)
         username: str = payload.get("sub")
@@ -52,8 +55,8 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db = Depends(get
         raise CredentialsException()
     return await UserRepository.get_by_username(db, username=token_data.username)
 
-# 現在のユーザーが有効かどうかを確認する非同期関数
 async def get_current_active_user(current_user: UserModel = Depends(get_current_user)) -> UserModel:
+    # 現在のユーザーが有効かどうかを確認する
     if current_user.disabled:
         raise InactiveUserException(identifier=current_user.id)
     return current_user
