@@ -28,12 +28,9 @@ async def list_users(db: AgnosticDatabase = Depends(get_db),
              response_model=UserModel, 
              status_code=status.HTTP_201_CREATED, 
              response_model_by_alias=False)
-# 認証無効化
-# async def create_user(user: UserModel = Body(...), 
-#                       db: AgnosticDatabase = Depends(get_db), 
-#                       current_user: str = Depends(get_current_active_user)) -> UserModel:
 async def create_user(user: UserModel = Body(...), 
-                      db: AgnosticDatabase = Depends(get_db)) -> UserModel:
+                      db: AgnosticDatabase = Depends(get_db), 
+                      current_user: str = Depends(get_current_active_user)) -> UserModel:
     # パスワードのハッシュ化
     if user.password is not None:
         user.password = get_hashed_password(user.password)
