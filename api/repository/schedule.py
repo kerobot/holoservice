@@ -1,6 +1,8 @@
 from datetime import datetime, timedelta, date, time
 from bson import ObjectId
 from pymongo import ReturnDocument
+from pymongo import DESCENDING
+from pymongo import ASCENDING
 from motor.core import AgnosticDatabase
 from api.schemas.schedule import ScheduleModel, ScheduleCollection
 from api.exceptions import NotFoundException
@@ -17,18 +19,28 @@ class ScheduleRepository:
 
     @staticmethod
     async def list(db: AgnosticDatabase, 
-                   date: date = None, 
+                   sdate: date = None, 
+                   edate: date = None,
                    code: str = None) -> ScheduleCollection:
         schedule_collection = db.get_collection("schedules")
         filter_dict = {}
-        if date is not None:
-            start = datetime.combine(date, time())
-            end = start + timedelta(days=1)
+
+        if sdate is not None and edate is not None:
+            start = datetime.combine(sdate, time())
+            end = datetime.combine(edate, time())
             filter_dict["streaming_at"] = {'$gte': start, '$lt': end}
+        elif sdate is not None:
+            start = datetime.combine(sdate, time())
+            filter_dict["streaming_at"] = {'$gte': start}
+        elif edate is not None:
+            end = datetime.combine(edate, time())
+            filter_dict["streaming_at"] = {'$lt': end}
+
         if code is not None:
             filter_dict["code"] = code
+
         return ScheduleCollection(schedules=await schedule_collection.find(filter_dict)
-                                  .sort("streaming_at", -1)
+                                  .sort("streaming_at", DESCENDING)
                                   .to_list(1000))
 
     @staticmethod

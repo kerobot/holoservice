@@ -21,11 +21,12 @@ async def get_schedule(id: str,
 @router.get("/schedules", 
             response_model=ScheduleCollection, 
             response_model_by_alias=False)
-async def list_schedules(date: date = None, 
+async def list_schedules(sdate: date = None, 
+                         edate: date = None,
                          code: str = None, 
                          db: AgnosticDatabase = Depends(get_db), 
                          current_user: str = Depends(get_current_active_user)) -> ScheduleCollection:
-    return await ScheduleRepository.list(db, date, code)
+    return await ScheduleRepository.list(db, sdate, edate, code)
 
 @router.post("/schedules", 
              response_model=ScheduleModel, 
