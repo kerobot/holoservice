@@ -4,6 +4,7 @@ from motor.core import AgnosticDatabase
 from api.oauth2 import get_current_active_user
 from api.db import get_db
 from api.repository.schedule import ScheduleRepository
+from api.repository.streamer import StreamerRepository
 from api.schemas.schedule import ScheduleModel, ScheduleCollection
 
 router = APIRouter(
@@ -24,9 +25,17 @@ async def get_schedule(id: str,
 async def list_schedules(sdate: date = None, 
                          edate: date = None,
                          code: str = None, 
+                         group: str = None,
                          db: AgnosticDatabase = Depends(get_db), 
                          current_user: str = Depends(get_current_active_user)) -> ScheduleCollection:
-    return await ScheduleRepository.list(db, sdate, edate, code)
+    codes = []
+    if code is not None:
+        codes.append(code)
+    if group is not None:
+        sc = await StreamerRepository.list(db, group)
+        if len(sc.streamers) > 0:
+            codes.extend([s.code for s in sc.streamers])
+    return await ScheduleRepository.list(db, sdate, edate, codes)
 
 @router.post("/schedules", 
              response_model=ScheduleModel, 

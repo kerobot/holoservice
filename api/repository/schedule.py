@@ -21,10 +21,9 @@ class ScheduleRepository:
     async def list(db: AgnosticDatabase, 
                    sdate: date = None, 
                    edate: date = None,
-                   code: str = None) -> ScheduleCollection:
+                   codes: [] = None) -> ScheduleCollection:
         schedule_collection = db.get_collection("schedules")
         filter_dict = {}
-
         if sdate is not None and edate is not None:
             start = datetime.combine(sdate, time())
             end = datetime.combine(edate, time())
@@ -35,10 +34,8 @@ class ScheduleRepository:
         elif edate is not None:
             end = datetime.combine(edate, time())
             filter_dict["streaming_at"] = {'$lt': end}
-
-        if code is not None:
-            filter_dict["code"] = code
-
+        if codes is not None and len(codes) > 0:
+            filter_dict["code"] = {"$in": codes}
         return ScheduleCollection(schedules=await schedule_collection.find(filter_dict)
                                   .sort("streaming_at", DESCENDING)
                                   .to_list(1000))

@@ -1,5 +1,7 @@
 from bson import ObjectId
 from pymongo import ReturnDocument
+from pymongo import DESCENDING
+from pymongo import ASCENDING
 from motor.core import AgnosticDatabase
 from api.schemas.streamer import StreamerModel, StreamerCollection
 from api.exceptions import NotFoundException
@@ -24,9 +26,13 @@ class StreamerRepository:
         raise NotFoundException(identifier=streamername)
 
     @staticmethod
-    async def list(db: AgnosticDatabase) -> StreamerCollection:
+    async def list(db: AgnosticDatabase,
+                   group: str) -> StreamerCollection:
         streamer_collection = db.get_collection("streamers")
-        return StreamerCollection(streamers=await streamer_collection.find().to_list(1000))
+        filter_dict = {}
+        if group is not None:
+            filter_dict["group"] = group
+        return StreamerCollection(streamers=await streamer_collection.find(filter_dict).sort("code", ASCENDING).to_list(1000))
 
     @staticmethod
     async def create(db: AgnosticDatabase, 
