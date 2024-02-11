@@ -21,7 +21,7 @@ class ScheduleRepository:
     async def list(db: AgnosticDatabase, 
                    sdate: date = None, 
                    edate: date = None,
-                   codes: [] = None) -> ScheduleCollection:
+                   codes: list[str] = None) -> ScheduleCollection:
         schedule_collection = db.get_collection("schedules")
         filter_dict = {}
         if sdate is not None and edate is not None:
