@@ -25,6 +25,7 @@ class ScheduleRepository:
                    codes: list[str] = None) -> ScheduleCollection:
         schedule_collection = db.get_collection("schedules")
         filter_dict = {}
+        # 期間
         if sdate is not None and edate is not None:
             start = datetime.combine(sdate, time())
             end = datetime.combine(edate, time())
@@ -35,11 +36,14 @@ class ScheduleRepository:
         elif edate is not None:
             end = datetime.combine(edate, time())
             filter_dict["streaming_at"] = {'$lt': end}
-        elif keyword is not None:
+        # キーワード
+        if keyword is not None:
             filter_dict["$or"] = [
                 {"title": {"$regex": keyword, "$options": "i"}},
+                {"name": {"$regex": keyword, "$options": "i"}},
                 {"description": {"$regex": keyword, "$options": "i"}}
             ]
+        # コード（グループ）
         if codes is not None and len(codes) > 0:
             filter_dict["code"] = {"$in": codes}
         return ScheduleCollection(schedules=await schedule_collection.find(filter_dict)
