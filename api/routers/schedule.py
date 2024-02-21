@@ -24,8 +24,9 @@ async def get_schedule(id: str,
             response_model_by_alias=False)
 async def list_schedules(sdate: date = None, 
                          edate: date = None,
-                         code: str = None, 
+                         keyword: str = None,
                          group: str = None,
+                         code: str = None, 
                          db: AgnosticDatabase = Depends(get_db), 
                          current_user: str = Depends(get_current_active_user)) -> ScheduleCollection:
     codes = []
@@ -35,7 +36,7 @@ async def list_schedules(sdate: date = None,
         sc = await StreamerRepository.list(db, group)
         if len(sc.streamers) > 0:
             codes.extend([s.code for s in sc.streamers])
-    return await ScheduleRepository.list(db, sdate, edate, codes)
+    return await ScheduleRepository.list(db, sdate, edate, keyword, codes)
 
 @router.post("/schedules", 
              response_model=ScheduleModel, 
