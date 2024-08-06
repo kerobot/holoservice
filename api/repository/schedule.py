@@ -19,23 +19,22 @@ class ScheduleRepository:
 
     @staticmethod
     async def list(db: AgnosticDatabase, 
-                   sdate: date = None, 
+                   sdate: date = None,
                    edate: date = None,
                    keyword: str = None,
                    codes: list[str] = None) -> ScheduleCollection:
         schedule_collection = db.get_collection("schedules")
         filter_dict = {}
+
         # 期間
-        if sdate is not None and edate is not None:
-            start = datetime.combine(sdate, time())
-            end = datetime.combine(edate, time())
-            filter_dict["streaming_at"] = {'$gte': start, '$lt': end}
-        elif sdate is not None:
+        if sdate is not None:
             start = datetime.combine(sdate, time())
             filter_dict["streaming_at"] = {'$gte': start}
-        elif edate is not None:
-            end = datetime.combine(edate, time())
-            filter_dict["streaming_at"] = {'$lt': end}
+
+        if edate is not None:
+            end = datetime.combine(edate + timedelta(days=1), time())
+            filter_dict.setdefault("streaming_at", {}).update({'$lt': end})
+
         # キーワード
         if keyword is not None:
             filter_dict["$or"] = [
