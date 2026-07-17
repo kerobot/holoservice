@@ -5,9 +5,10 @@ from typing import Generator
 
 mongo_settings = get_mongo_settings()
 
+
 def get_db() -> Generator[AgnosticDatabase, None, None]:
+    client: AgnosticClient = motor.motor_asyncio.AsyncIOMotorClient(mongo_settings.uri)
     try:
-        client: AgnosticClient = motor.motor_asyncio.AsyncIOMotorClient(mongo_settings.uri)
         db: AgnosticDatabase = client.get_database(mongo_settings.database)
         yield db
     finally:

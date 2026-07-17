@@ -18,7 +18,7 @@ app = FastAPI(
 app.middleware("http")(request_handler)
 
 # CORS設定
-origins: list = ["*"] # とりあえず全てのオリジンを許可
+origins: list = ["*"]  # とりあえず全てのオリジンを許可
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
@@ -33,8 +33,9 @@ app.include_router(streamer.router)
 app.include_router(user.router)
 app.include_router(authentication.router)
 
+
 # FastAPIのエラーハンドラーを登録
 @app.exception_handler(RequestValidationError)
-async def handler(request:Request, exc:RequestValidationError) -> JSONResponse:
+async def handler(request: Request, exc: RequestValidationError) -> JSONResponse:
     print(exc)
     return JSONResponse(content={}, status_code=status.HTTP_422_UNPROCESSABLE_ENTITY)

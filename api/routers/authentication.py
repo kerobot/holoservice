@@ -8,18 +8,18 @@ from api.oauth2 import authenticate_user, create_access_token
 from api.schemas.token import Token
 from api.schemas.user import UserModel
 
-router = APIRouter(
-    tags=['authentication']
-)
+router = APIRouter(tags=["authentication"])
 
-@router.post('/token', response_model=Token)
-async def get_token(request: OAuth2PasswordRequestForm = Depends(), 
-                    db: AgnosticDatabase = Depends(get_db)) -> dict:
-    user: UserModel = await authenticate_user(request.username, request.password, db)
+
+@router.post("/token", response_model=Token)
+async def get_token(
+    request: OAuth2PasswordRequestForm = Depends(),
+    db: AgnosticDatabase = Depends(get_db),
+) -> dict:
+    user: UserModel | None = await authenticate_user(
+        request.username, request.password, db
+    )
     if not user:
-        raise CredentialsException(message='Incorrect username or password')
-    access_token: str = create_access_token(data={'sub': user.username})
-    return {
-        'access_token': access_token,
-        'token_type': 'bearer'
-    }
+        raise CredentialsException(message="Incorrect username or password")
+    access_token: str = create_access_token(data={"sub": user.username})
+    return {"access_token": access_token, "token_type": "bearer"}

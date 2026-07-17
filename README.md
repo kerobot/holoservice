@@ -2,104 +2,129 @@
 
 MongoDB に登録されているホロジュールのホロライブスケジュールや配信者の情報を API として提供します。（ホロコレクトで登録したデータを利用します。）
 
-## 環境
+## 動作環境
 
 * Windows 11
-* Python 3.11
-* PowerShell 7.3.8
-* Visual Studio Code 1.83
-* Git for Windows 2.41
+* Python 3.11+
+* uv
 * MongoDB
+* Visual Studio Code
 
-## Poetry と pyenv の確認
+## MongoDB の事前確認
 
-```powershell
-> poetry --version
-Poetry version 1.3.2
-
-> pyenv --version
-pyenv 3.1.1
-```
-
-## MongoDB の確認
+### 1. MongoDB バージョン確認
 
 ```powershell
-> mongosh --version
-1.6.0
+mongosh --version
 ```
 
-## MongoDB に接続できることを確認
+### 2. MongoDB へ接続できることを確認
 
 ```powershell
-> mongosh localhost:27017/admin -u admin -p
+mongosh localhost:27017/admin -u admin -p
 ```
 
-## データベースを作成してロール（今回は dbOwner ）を設定
+### 3. データベース作成とロール設定（dbOwner）
 
 ```powershell
-MongoDB > use holoduledb
-MongoDB > db.createUser( { user:"owner", pwd:"password", roles:[{ "role" : "dbOwner", "db" : "holoduledb" }] } );
+use holoduledb
+db.createUser({ user: "owner", pwd: "password", roles: [{ role: "dbOwner", db: "holoduledb" }] })
 ```
 
-## プロジェクトで利用する Python をインストール
+## セットアップ（uv）
+
+### 1. `.env` を作成
+
+`.env.sample` をコピーして `.env` を作成し、接続情報を設定してください。
 
 ```powershell
-> pyenv install 3.11.1
+Copy-Item .env.sample .env
 ```
 
-## プロジェクトで利用するローカルの Python のバージョンを変更
+`.env` の主な項目:
+
+```env
+MONGO_URI="mongodb://[user]:[password]@127.0.0.1:27017/[db]"
+MONGO_DATABASE="holoduledb"
+JWT_SECRET_KEY="[JWT_SECRET_KEY]"
+JWT_ALGORITHM="HS256"
+JWT_EXP_DELTA_MINUTES=15
+```
+
+### 2. 依存関係のインストール
 
 ```powershell
-> pyenv local 3.11.1
-> python -V
-Python 3.11.1
+uv sync
 ```
 
-## バージョンを指定して、Python 仮想環境を作成
+### 3. API の起動
 
 ```powershell
-> python -c "import sys; print(sys.executable)"
-> poetry env use C:\Users\[UserName]\.pyenv\pyenv-win\versions\3.11.1\python.exe
+uv run uvicorn api.main:app --host 0.0.0.0 --port 8001 --reload
 ```
 
-## pyproject.toml を利用して Python のパッケージを一括インストール
+## VS Code での実行・デバッグ
 
-```powershell
-> poetry install
-```
+`.vscode/launch.json` は uv 環境（`.venv`）を使う設定です。
 
-## プログラムの実行
+* `FastAPI: Run (uv)`
+  * `--reload` ありの通常実行
+* `FastAPI: Debug (uv)`
+  * `--reload` なしのデバッグ向け実行
 
-```powershell
-> poetry run uvicorn api.main:app --reload --port 8001
-```
-
-## Swaggerの利用
-
-```text
-http://127.0.0.1:8001/docs
-```
-
-## lounch.json の設定
+現在の設定例:
 
 ```json
 {
-    "version": "1.0.0",
+    "version": "0.2.0",
     "configurations": [
         {
-            "name": "Python: FastAPI",
-            "type": "python",
+            "name": "FastAPI: Run (uv)",
+            "type": "debugpy",
             "request": "launch",
+            "python": "${workspaceFolder}\\.venv\\Scripts\\python.exe",
             "module": "uvicorn",
             "args": [
                 "api.main:app",
-                "--reload",
+                "--host",
+                "0.0.0.0",
+                "--port",
+                "8001",
+                "--reload"
+            ],
+            "cwd": "${workspaceFolder}",
+            "jinja": true,
+            "justMyCode": true
+        },
+        {
+            "name": "FastAPI: Debug (uv)",
+            "type": "debugpy",
+            "request": "launch",
+            "python": "${workspaceFolder}\\.venv\\Scripts\\python.exe",
+            "module": "uvicorn",
+            "args": [
+                "api.main:app",
+                "--host",
+                "0.0.0.0",
                 "--port",
                 "8001"
             ],
+            "cwd": "${workspaceFolder}",
             "jinja": true,
             "justMyCode": true
         }
     ]
 }
 ```
+
+## Swagger
+
+```text
+http://127.0.0.1:8001/docs
+```
+
+## 補足（認証関連）
+
+* このプロジェクトは `passlib` + `bcrypt` を利用します。
+* 依存は `pyproject.toml` にて `bcrypt>=4.0.0,<4.1.0` を指定しています。
+* ログイン用の `users.password` は必ずハッシュ値（bcrypt 形式）を保存してください。
